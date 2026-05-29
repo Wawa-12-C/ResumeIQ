@@ -8,10 +8,12 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
 try:
+    from src.ai_analyzer import AIResumeAnalyzer
     from src.config import Config
     from src.file_handler import FileHandler
     from src.resume_analyzer import ResumeAnalyzer
 except ModuleNotFoundError:
+    from ai_analyzer import AIResumeAnalyzer
     from config import Config
     from file_handler import FileHandler
     from resume_analyzer import ResumeAnalyzer
@@ -30,7 +32,11 @@ app = Flask(
 )
 app.config.from_object(Config)
 file_handler = FileHandler(app.config["UPLOAD_FOLDER"])
-resume_analyzer = ResumeAnalyzer()
+resume_analyzer = AIResumeAnalyzer(
+    api_key=app.config["ANTHROPIC_API_KEY"],
+    model=app.config["ANTHROPIC_MODEL"],
+    fallback_analyzer=ResumeAnalyzer(),
+)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -51,6 +57,11 @@ def analyze_uploaded_resume():
         flash("Please choose a PDF or TXT resume file.")
         return None
 
+    job_description = request.form.get("job_description", "").strip()
+    if not job_description:
+        flash("Please paste the job description before analyzing.")
+        return None
+
     original_filename = uploaded_file.filename
     if not file_handler.is_allowed(original_filename):
         flash("Unsupported file type. Please upload a PDF or TXT file.")
@@ -65,7 +76,7 @@ def analyze_uploaded_resume():
     try:
         saved_path = file_handler.save(uploaded_file, filename)
         text = file_handler.extract_text(saved_path)
-        return resume_analyzer.analyze(text)
+        return resume_analyzer.analyze(text, job_description)
     except ValueError as exc:
         flash(str(exc))
         logger.info("Resume validation failed: %s", exc)

@@ -33,6 +33,43 @@ class ResumeAnalyzerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             ResumeAnalyzer().analyze("   ")
 
+    def test_job_match_uses_keyword_aliases(self):
+        """Job matching should understand common equivalent phrases."""
+        resume_text = """
+        Projects: built a Python Flask web application with SQL.
+        Used Git for version control and wrote pytest unit tests.
+        """
+        job_description = """
+        Looking for RESTful API experience, database knowledge, testing,
+        Git, Python, Flask, and web applications.
+        """
+
+        result = ResumeAnalyzer().analyze(resume_text, job_description)
+
+        self.assertIn("database", result.matched_keywords)
+        self.assertIn("testing", result.matched_keywords)
+        self.assertIn("web development", result.matched_keywords)
+        self.assertIn("rest api", result.missing_keywords)
+        self.assertLess(result.job_match, 100)
+
+    def test_ats_tips_follow_resume_content(self):
+        """ATS tips should change based on uploaded resume content."""
+        random_result = ResumeAnalyzer().analyze(
+            "banana chair moon table unrelated random words"
+        )
+        detailed_result = ResumeAnalyzer().analyze(
+            """
+            Email: alex@example.com
+            Phone: 123-456-7890
+            Education: UESTC Software Engineering
+            Projects: Built a Python Flask API with SQL and Git.
+            Skills: Python, Flask, SQL, Git, teamwork.
+            """
+        )
+
+        self.assertNotEqual(random_result.ats_tips, detailed_result.ats_tips)
+        self.assertIn("selectable text", random_result.ats_tips[1])
+
 
 class FlaskAppTestCase(unittest.TestCase):
     """Integration tests for the Flask upload workflow."""
@@ -63,7 +100,8 @@ class FlaskAppTestCase(unittest.TestCase):
             "resume": (
                 BytesIO(resume_text.encode("utf-8")),
                 "resume.txt",
-            )
+            ),
+            "job_description": "Python Flask SQL Git intern role",
         }
 
         response = self.client.post(
@@ -76,9 +114,32 @@ class FlaskAppTestCase(unittest.TestCase):
         self.assertIn(b"Score", response.data)
         self.assertIn(b"Technical Skills", response.data)
 
+    def test_random_txt_upload_does_not_show_sample_skills(self):
+        """Random text should not display sample resume skill data."""
+        data = {
+            "resume": (
+                BytesIO(b"banana chair moon table unrelated random words"),
+                "random.txt",
+            ),
+            "job_description": "Python Flask SQL Git intern role",
+        }
+
+        response = self.client.post(
+            "/",
+            data=data,
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"No technical skills detected", response.data)
+        self.assertNotIn(b"<li>Python</li>", response.data)
+
     def test_invalid_file_type_shows_error(self):
         """Uploading an unsupported file type should show an error."""
-        data = {"resume": (BytesIO(b"not a resume"), "resume.docx")}
+        data = {
+            "resume": (BytesIO(b"not a resume"), "resume.docx"),
+            "job_description": "Python Flask SQL Git intern role",
+        }
 
         response = self.client.post(
             "/",
@@ -88,6 +149,19 @@ class FlaskAppTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Unsupported file type", response.data)
+
+    def test_missing_job_description_shows_error(self):
+        """Job description is required for matching."""
+        data = {"resume": (BytesIO(b"Python Flask resume"), "resume.txt")}
+
+        response = self.client.post(
+            "/",
+            data=data,
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Please paste the job description", response.data)
 
 
 if __name__ == "__main__":

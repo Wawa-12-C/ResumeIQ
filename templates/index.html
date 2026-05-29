@@ -6,15 +6,17 @@
   <title>ResumeIQ</title>
   <style>
     :root {
-      color-scheme: light;
-      --bg: #f6f7fb;
-      --panel: #ffffff;
-      --ink: #18202f;
-      --muted: #5d687a;
-      --line: #dce2ea;
-      --accent: #1f7a68;
-      --accent-dark: #15594c;
-      --warn: #b84a38;
+      color-scheme: dark;
+      --bg: #0c0c0f;
+      --card: #141418;
+      --card-2: #1c1c22;
+      --line: #2a2a35;
+      --text: #e8e8ee;
+      --muted: #7a7a90;
+      --accent: #b5f265;
+      --good: #4ade80;
+      --warn: #fbbf24;
+      --bad: #f87171;
     }
 
     * {
@@ -22,87 +24,93 @@
     }
 
     body {
+      min-height: 100vh;
       margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.55;
+      background: #050507;
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
     }
 
-    main {
-      width: min(1080px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 36px 0;
+    button,
+    input,
+    textarea {
+      font: inherit;
     }
 
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-      gap: 24px;
-      align-items: stretch;
+    .wrap {
+      width: min(980px, calc(100% - 24px));
+      min-height: calc(100vh - 24px);
+      margin: 12px auto;
+      overflow: hidden;
+      border: 1px solid #202029;
+      border-radius: 12px;
+      background:
+        linear-gradient(rgba(181, 242, 101, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(181, 242, 101, 0.035) 1px, transparent 1px),
+        var(--bg);
+      background-size: 40px 40px;
     }
 
-    .intro,
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 28px;
+    .header {
+      padding: 32px 24px 16px;
+      text-align: center;
     }
 
-    h1,
-    h2,
-    h3,
-    p {
-      margin-top: 0;
-    }
-
-    h1 {
-      margin-bottom: 12px;
-      font-size: clamp(2rem, 5vw, 4rem);
+    .logo {
+      margin: 0;
+      font-size: clamp(2.25rem, 7vw, 4rem);
+      font-weight: 900;
       line-height: 1;
       letter-spacing: 0;
     }
 
-    h2 {
-      font-size: 1.35rem;
+    .logo span {
+      color: var(--accent);
     }
 
-    .intro p,
-    .muted {
+    .tag {
+      margin: 8px 0 0;
       color: var(--muted);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.78rem;
     }
 
-    .upload-form {
-      display: grid;
-      gap: 16px;
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
     }
 
-    input[type="file"] {
-      width: 100%;
-      padding: 12px;
-      border: 1px dashed var(--accent);
-      border-radius: 8px;
-      background: #f8fbfa;
-    }
-
-    button {
-      min-height: 44px;
-      border: 0;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #ffffff;
-      font-size: 1rem;
-      font-weight: 700;
+    .tab-button {
+      min-height: 34px;
+      padding: 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
       cursor: pointer;
+      font-size: 0.84rem;
+      transition: border-color 0.2s ease, color 0.2s ease;
     }
 
-    button:hover {
-      background: var(--accent-dark);
+    .tab-button[aria-selected="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .screen {
+      display: none;
+      padding: 0 24px 30px;
+    }
+
+    .screen.active {
+      display: block;
     }
 
     .messages {
-      margin: 0 0 18px;
+      max-width: 700px;
+      margin: 0 auto 18px;
       padding: 0;
       list-style: none;
     }
@@ -110,72 +118,431 @@
     .messages li {
       margin-bottom: 8px;
       padding: 10px 12px;
-      border-left: 4px solid var(--warn);
-      background: #fff2ee;
-      color: #693026;
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      border-radius: 10px;
+      background: rgba(248, 113, 113, 0.1);
+      color: #fecaca;
+      font-size: 0.86rem;
     }
 
-    .results {
-      margin-top: 24px;
-      display: grid;
-      grid-template-columns: 220px minmax(0, 1fr);
-      gap: 24px;
+    .upload-card {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
     }
 
-    .score {
-      display: grid;
-      place-items: center;
-      aspect-ratio: 1;
+    .empty-state {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      text-align: center;
+    }
+
+    .drop-zone {
+      display: flex;
+      min-height: 190px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      padding: 28px 18px;
+      border: 2px dashed var(--line);
+      border-radius: 10px;
+      text-align: center;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(181, 242, 101, 0.05);
+    }
+
+    .file-mark {
+      width: 38px;
+      height: 46px;
+      margin: 0 auto 10px;
+      border: 1.5px solid var(--muted);
+      border-radius: 6px;
+      position: relative;
+    }
+
+    .file-mark::after {
+      content: "";
+      width: 14px;
+      height: 14px;
+      position: absolute;
+      right: -1px;
+      top: -1px;
+      border-left: 1.5px solid var(--muted);
+      border-bottom: 1.5px solid var(--muted);
+      background: var(--card);
+    }
+
+    .drop-title {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .drop-subtitle {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .ghost-input {
+      width: 1px;
+      height: 1px;
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .file-label,
+    .btn-secondary,
+    .btn-primary {
+      display: inline-flex;
+      min-height: 36px;
+      align-items: center;
+      justify-content: center;
       border-radius: 8px;
-      background: #e8f3f0;
-      color: var(--accent-dark);
-      font-size: 3.25rem;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.86rem;
+    }
+
+    .file-label,
+    .btn-secondary {
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+    }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 11px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--card-2);
+    }
+
+    .file-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .file-name {
+      flex: 1;
+      color: var(--accent);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.8rem;
+      word-break: break-all;
+    }
+
+    .field-label,
+    .card-label {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .job-textarea {
+      width: 100%;
+      min-height: 170px;
+      margin-bottom: 16px;
+      resize: vertical;
+      padding: 11px 13px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      outline: none;
+      background: var(--card-2);
+      color: var(--text);
+      font-size: 0.86rem;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0 16px;
+      border: 0;
+      background: var(--accent);
+      color: #0c0c0f;
       font-weight: 800;
     }
 
-    .score span {
-      font-size: 1rem;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    .grid {
+    .results-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: 14px;
+      max-width: 760px;
+      margin: 0 auto;
     }
 
-    .tag-list {
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--card);
+      padding: 19px 21px;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .results-animated .card {
+      animation: card-in 0.48s ease forwards;
+    }
+
+    .results-animated .card:nth-child(2) {
+      animation-delay: 0.06s;
+    }
+
+    .results-animated .card:nth-child(3) {
+      animation-delay: 0.12s;
+    }
+
+    .results-animated .card:nth-child(4) {
+      animation-delay: 0.18s;
+    }
+
+    .results-animated .card:nth-child(5) {
+      animation-delay: 0.24s;
+    }
+
+    .span-2 {
+      grid-column: span 2;
+    }
+
+    .score-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 230px;
+    }
+
+    .ring {
+      width: 122px;
+      height: 122px;
+      position: relative;
+    }
+
+    .ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .score-text {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-content: center;
+      justify-content: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .score-number {
+      color: var(--accent);
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .score-total {
+      color: var(--muted);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.72rem;
+      line-height: 1.2;
+      transform: translateY(-1px);
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #0c0c0f;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    .summary {
+      margin: 0 0 13px;
+      color: var(--text);
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+
+    .chips,
+    .pills {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 7px;
+      margin: 0;
       padding: 0;
       list-style: none;
     }
 
-    .tag-list li {
-      padding: 6px 10px;
+    .chip,
+    .pills li {
       border-radius: 999px;
-      background: #eef1f5;
-      color: #313b4b;
-      font-size: 0.92rem;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.72rem;
     }
 
-    .suggestions {
-      padding-left: 20px;
+    .chip {
+      padding: 3px 10px;
+      border: 1px solid var(--line);
+      color: var(--muted);
     }
 
-    @media (max-width: 760px) {
-      .hero,
-      .results,
-      .grid {
+    .chip.found {
+      border-color: var(--good);
+      color: var(--good);
+    }
+
+    .chip.missing {
+      border-color: var(--bad);
+      color: var(--bad);
+    }
+
+    .pills li {
+      padding: 5px 11px;
+      background: rgba(74, 222, 128, 0.1);
+      color: var(--good);
+    }
+
+    .pills.warn li {
+      background: rgba(251, 191, 36, 0.1);
+      color: var(--warn);
+    }
+
+    .pills.bad li {
+      background: rgba(248, 113, 113, 0.1);
+      color: var(--bad);
+    }
+
+    .tips {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .tips li {
+      position: relative;
+      padding-left: 17px;
+      color: var(--text);
+      font-size: 0.84rem;
+    }
+
+    .tips li::before {
+      content: ">";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    .match-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .match-track {
+      flex: 1;
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--card-2);
+    }
+
+    .match-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+    }
+
+    .match-number {
+      min-width: 42px;
+      color: var(--accent);
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .kw-grid,
+    .skill-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .footer {
+      margin-top: 12px;
+      padding: 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.72rem;
+      text-align: center;
+    }
+
+    @keyframes card-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .wrap {
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+        border-radius: 0;
+      }
+
+      .results-grid,
+      .kw-grid,
+      .skill-grid {
         grid-template-columns: 1fr;
+      }
+
+      .span-2 {
+        grid-column: span 1;
       }
     }
   </style>
 </head>
 <body>
-  <main>
+  <div class="wrap">
+    <header class="header">
+      <h1 class="logo">Resume<span>IQ</span></h1>
+      <p class="tag">AI resume analysis in seconds</p>
+    </header>
+
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <ul class="messages">
@@ -186,75 +553,349 @@
       {% endif %}
     {% endwith %}
 
-    <section class="hero">
-      <div class="intro">
-        <h1>ResumeIQ</h1>
-        <p>
-          Upload a resume and get a quick rule-based analysis of structure,
-          skills, contact information, and improvement suggestions.
-        </p>
-        <p class="muted">
-          Supported formats: PDF and TXT. Maximum file size: 5 MB.
-        </p>
-      </div>
+    <nav class="tabs" aria-label="ResumeIQ views">
+      <button
+        class="tab-button"
+        type="button"
+        data-tab="upload"
+        aria-selected="{{ 'false' if analysis else 'true' }}"
+      >
+        Upload view
+      </button>
+      <button
+        class="tab-button"
+        type="button"
+        data-tab="results"
+        aria-selected="{{ 'true' if analysis else 'false' }}"
+      >
+        Results view
+      </button>
+    </nav>
 
-      <div class="panel">
-        <h2>Analyze a Resume</h2>
-        <form class="upload-form" method="post" enctype="multipart/form-data">
-          <label for="resume">Resume file</label>
-          <input id="resume" name="resume" type="file" accept=".pdf,.txt" required />
-          <button type="submit">Analyze Resume</button>
-        </form>
-      </div>
-    </section>
-
-    {% if analysis %}
-      <section class="results">
-        <div class="panel">
-          <h2>Score</h2>
-          <div class="score">
-            <div>{{ analysis.score }}<span>/100</span></div>
+    <section
+      id="upload-panel"
+      class="screen {{ '' if analysis else 'active' }}"
+    >
+      <form class="upload-card" method="post" enctype="multipart/form-data">
+        <div class="drop-zone" id="drop-zone">
+          <div>
+            <div class="file-mark" aria-hidden="true"></div>
+            <h2 class="drop-title">Analyze a Resume</h2>
+            <p class="drop-subtitle">PDF or TXT, maximum 5 MB</p>
+            <input
+              class="ghost-input"
+              id="resume"
+              name="resume"
+              type="file"
+              accept=".pdf,.txt"
+            />
+            <label class="file-label" for="resume">Browse file</label>
           </div>
-          <p class="muted">{{ analysis.word_count }} words detected</p>
         </div>
 
-        <div class="panel">
-          <h2>Summary</h2>
-          <p>{{ analysis.summary }}</p>
+        <div class="file-row">
+          <span class="file-dot" aria-hidden="true"></span>
+          <span class="file-name" id="file-name">No file chosen</span>
+          <button class="btn-secondary" type="button" id="clear-file">Clear</button>
+        </div>
 
-          <div class="grid">
-            <div>
-              <h3>Found Sections</h3>
-              <ul class="tag-list">
-                {% for section in analysis.found_sections %}
-                  <li>{{ section }}</li>
-                {% else %}
-                  <li>None detected</li>
-                {% endfor %}
-              </ul>
+        <label class="field-label" for="job-description">
+          Job description
+        </label>
+        <textarea
+          class="job-textarea"
+          id="job-description"
+          name="job_description"
+          placeholder="Paste the job description here to improve job-match and keyword-gap analysis."
+          required
+        ></textarea>
+
+        <div class="actions">
+          <button class="btn-primary" type="submit">
+            Analyze Resume with AI
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section
+      id="results-panel"
+      class="screen {{ 'active' if analysis else '' }}"
+    >
+      {% if not analysis %}
+        <div class="empty-state">
+          <p class="card-label">No result yet</p>
+          <p class="summary">
+            Upload a real PDF or TXT resume and click Analyze Resume with AI.
+          </p>
+          <button class="btn-secondary" type="button" id="empty-upload-button">
+            Go to upload
+          </button>
+        </div>
+      {% else %}
+      <div class="results-grid" id="results-grid">
+        <article class="card score-card">
+          <p class="card-label">Overall Score</p>
+          <div class="ring">
+            <svg viewBox="0 0 122 122" width="122" height="122">
+              <circle
+                cx="61"
+                cy="61"
+                r="51"
+                fill="none"
+                stroke="#1c1c22"
+                stroke-width="10"
+              />
+              <circle
+                id="score-ring"
+                cx="61"
+                cy="61"
+                r="51"
+                fill="none"
+                stroke="#b5f265"
+                stroke-width="10"
+                stroke-linecap="round"
+                stroke-dasharray="320.44"
+                stroke-dashoffset="320.44"
+              />
+            </svg>
+            <div class="score-text">
+              <span class="score-number" id="score-number">0</span>
+              <span class="score-total">/100</span>
             </div>
+          </div>
+          <span class="badge">{{ analysis.source }}</span>
+        </article>
 
+        <article class="card">
+          <p class="card-label">Summary</p>
+          <p class="summary">{{ analysis.summary }}</p>
+          <div class="chips">
+            {% for section in analysis.found_sections %}
+              <span class="chip found">{{ section }}</span>
+            {% endfor %}
+            {% for section in analysis.missing_sections %}
+              <span class="chip missing">{{ section }}</span>
+            {% endfor %}
+          </div>
+        </article>
+
+        <article class="card">
+          <p class="card-label">Strengths</p>
+          <ul class="pills">
+            {% for strength in analysis.strengths %}
+              <li>{{ strength }}</li>
+            {% else %}
+              <li>No clear strengths detected</li>
+            {% endfor %}
+          </ul>
+        </article>
+
+        <article class="card">
+          <p class="card-label">Improvements</p>
+          <ul class="pills warn">
+            {% for suggestion in analysis.suggestions[:4] %}
+              <li>{{ suggestion }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+
+        <article class="card span-2">
+          <p class="card-label">Technical Skills</p>
+          <div class="skill-grid">
             <div>
-              <h3>Technical Skills</h3>
-              <ul class="tag-list">
+              <p class="field-label">Detected</p>
+              <ul class="pills">
                 {% for skill in analysis.technical_skills %}
                   <li>{{ skill }}</li>
                 {% else %}
-                  <li>None detected</li>
+                  <li>No technical skills detected</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div>
+              <p class="field-label">Soft skills</p>
+              <ul class="pills">
+                {% for skill in analysis.soft_skills %}
+                  <li>{{ skill }}</li>
+                {% else %}
+                  <li>No soft skills detected</li>
                 {% endfor %}
               </ul>
             </div>
           </div>
+        </article>
 
-          <h3>Suggestions</h3>
-          <ol class="suggestions">
-            {% for suggestion in analysis.suggestions %}
-              <li>{{ suggestion }}</li>
+        <article class="card">
+          <p class="card-label">ATS Tips</p>
+          <ul class="tips">
+            {% for tip in analysis.ats_tips %}
+              <li>{{ tip }}</li>
             {% endfor %}
-          </ol>
-        </div>
-      </section>
-    {% endif %}
-  </main>
+          </ul>
+        </article>
+
+        <article class="card">
+          <p class="card-label">Job Match</p>
+          <div class="match-row">
+            <div class="match-track">
+              <div class="match-fill" id="match-fill"></div>
+            </div>
+            <span class="match-number" id="match-number">0%</span>
+          </div>
+          <div class="kw-grid">
+            <div>
+              <p class="field-label">Matched</p>
+              <ul class="pills">
+                {% for keyword in analysis.matched_keywords %}
+                  <li>{{ keyword }}</li>
+                {% else %}
+                  <li>No target keywords matched</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div>
+              <p class="field-label">Missing</p>
+              <ul class="pills bad">
+                {% for keyword in analysis.missing_keywords %}
+                  <li>{{ keyword }}</li>
+                {% else %}
+                  <li>No target keyword gaps detected</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div style="text-align: center; margin-top: 22px;">
+        <button class="btn-secondary" type="button" id="analyze-another">
+          Analyze another
+        </button>
+      </div>
+      {% endif %}
+    </section>
+
+    <footer class="footer">
+      Built with Flask - UESTC Software Engineering Basics Project
+    </footer>
+  </div>
+
+  <script>
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const panels = {
+      upload: document.querySelector("#upload-panel"),
+      results: document.querySelector("#results-panel"),
+    };
+    const resultsGrid = document.querySelector("#results-grid");
+    const scoreNumber = document.querySelector("#score-number");
+    const scoreRing = document.querySelector("#score-ring");
+    const matchNumber = document.querySelector("#match-number");
+    const matchFill = document.querySelector("#match-fill");
+    const analyzeAnother = document.querySelector("#analyze-another");
+    const emptyUploadButton = document.querySelector("#empty-upload-button");
+    const fileInput = document.querySelector("#resume");
+    const fileName = document.querySelector("#file-name");
+    const clearFile = document.querySelector("#clear-file");
+    const dropZone = document.querySelector("#drop-zone");
+    const circumference = 320.44;
+    const initialTab = "{{ 'results' if analysis else 'upload' }}";
+    const targetScore = Number("{{ analysis.score if analysis else 0 }}");
+    const targetMatch = Number("{{ analysis.job_match if analysis else 0 }}");
+    let animationFrameId = null;
+
+    function switchTab(tabName) {
+      tabButtons.forEach((button) => {
+        const selected = button.dataset.tab === tabName;
+        button.setAttribute("aria-selected", selected.toString());
+      });
+
+      Object.entries(panels).forEach(([name, panel]) => {
+        panel.classList.toggle("active", name === tabName);
+      });
+
+      if (tabName === "results") {
+        runResultsAnimation();
+      }
+    }
+
+    function runResultsAnimation() {
+      if (!scoreNumber || !scoreRing || !matchNumber || !matchFill) {
+        return;
+      }
+
+      cancelAnimationFrame(animationFrameId);
+      scoreNumber.textContent = "0";
+      matchNumber.textContent = "0%";
+      matchFill.style.width = "0%";
+      scoreRing.style.strokeDashoffset = circumference;
+      if (resultsGrid) {
+        resultsGrid.classList.remove("results-animated");
+        void resultsGrid.offsetWidth;
+        resultsGrid.classList.add("results-animated");
+      }
+
+      const duration = 1200;
+      const startedAt = performance.now();
+
+      function tick(now) {
+        const progress = Math.min((now - startedAt) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const score = Math.round(eased * targetScore);
+        const match = Math.round(eased * targetMatch);
+
+        scoreNumber.textContent = score.toString();
+        scoreRing.style.strokeDashoffset =
+          circumference - (score / 100) * circumference;
+        matchNumber.textContent = `${match}%`;
+        matchFill.style.width = `${match}%`;
+
+        if (progress < 1) {
+          animationFrameId = requestAnimationFrame(tick);
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(tick);
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => switchTab(button.dataset.tab));
+    });
+
+    if (analyzeAnother) {
+      analyzeAnother.addEventListener("click", () => switchTab("upload"));
+    }
+
+    if (emptyUploadButton) {
+      emptyUploadButton.addEventListener("click", () => switchTab("upload"));
+    }
+
+    fileInput.addEventListener("change", () => {
+      fileName.textContent = fileInput.files[0]?.name || "No file chosen";
+    });
+
+    clearFile.addEventListener("click", () => {
+      fileInput.value = "";
+      fileName.textContent = "No file chosen";
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropZone.classList.remove("drag-over");
+      });
+    });
+
+    if (initialTab === "results") {
+      runResultsAnimation();
+    }
+  </script>
 </body>
 </html>

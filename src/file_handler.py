@@ -5,6 +5,7 @@ Provides save, text extraction, and cleanup functionality
 for uploaded resume files.
 """
 
+import importlib
 import logging
 import os
 from pathlib import Path
@@ -111,7 +112,7 @@ class FileHandler:
     def _read_pdf(filepath: Path) -> str:
         """Extract text from a PDF using PyMuPDF (fitz)."""
         try:
-            import fitz  # PyMuPDF
+            fitz = importlib.import_module("fitz")
 
             text_parts: list[str] = []
             with fitz.open(str(filepath)) as doc:
@@ -126,6 +127,12 @@ class FileHandler:
     @staticmethod
     def _read_pdf_pdfminer(filepath: Path) -> str:
         """Fallback PDF extraction using pdfminer.six."""
-        from pdfminer.high_level import extract_text as pdfminer_extract
+        try:
+            pdfminer = importlib.import_module("pdfminer.high_level")
+        except ImportError as exc:
+            raise ImportError(
+                "Neither PyMuPDF nor pdfminer.six is installed for PDF extraction."
+            ) from exc
 
+        pdfminer_extract = getattr(pdfminer, "extract_text")
         return pdfminer_extract(str(filepath))

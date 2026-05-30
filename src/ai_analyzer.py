@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import logging
 import re
@@ -61,13 +62,13 @@ class AIResumeAnalyzer:
     ) -> dict[str, Any]:
         """Call the AI provider and parse its JSON response."""
         try:
-            from anthropic import Anthropic
+            anthropic = importlib.import_module("anthropic")
         except ImportError as exc:
             raise RuntimeError(
                 "The anthropic package is not installed."
             ) from exc
 
-        client = Anthropic(api_key=self.api_key)
+        client = anthropic.Anthropic(api_key=self.api_key)
         response = client.messages.create(
             model=self.model,
             max_tokens=1200,

@@ -24,14 +24,9 @@ requirements.txt
 - Show improvement suggestions
 - Handle invalid file types, empty uploads, and oversized files
 
-## Run the Website
+## Website
 
-```bash
-pip install -r requirements.txt
-python src/app.py
-```
-
-Open `http://127.0.0.1:5000` in a browser.
+https://resumeiq-rtgu.onrender.com
 
 ## Run Tests
 

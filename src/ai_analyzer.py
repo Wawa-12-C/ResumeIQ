@@ -74,9 +74,11 @@ class AIResumeAnalyzer:
             max_tokens=1200,
             temperature=0.2,
             system=(
-                "You are a resume screening assistant. Analyze only the "
-                "provided resume text and optional job description. Return "
-                "strict JSON with no markdown."
+                "You are a senior technical recruiter. Score resumes honestly. "
+                "A score of 90+ means exceptional with quantified impact. "
+                "60–80 means solid but improvable. Below 50 means significant "
+                "gaps exist. Never inflate scores. Analyze only the provided "
+                "resume and job description. Return strict JSON with no markdown."
             ),
             messages=[
                 {

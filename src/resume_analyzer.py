@@ -41,6 +41,23 @@ TECHNICAL_SKILLS = {
     "testing",
     "unit testing",
     "web development",
+    "typescript",
+    "react",
+    "node.js",
+    "mongodb",
+    "redis",
+    "kubernetes",
+    "terraform",
+    "fastapi",
+    "spring boot",
+    "postgresql",
+    "graphql",
+    "bash",
+    "pytorch",
+    "tensorflow",
+    "excel",
+    "figma",
+    "opencv",
 }
 
 SOFT_SKILLS = {
@@ -51,6 +68,12 @@ SOFT_SKILLS = {
     "collaboration",
     "presentation",
     "time management",
+    "critical thinking",
+    "adaptability",
+    "attention to detail",
+    "project management",
+    "mentoring",
+    "creativity",
 }
 
 SECTION_KEYWORDS = {
@@ -87,6 +110,40 @@ KEYWORD_ALIASES = {
     "testing": ("testing", "test", "tests", "tested"),
     "unit testing": ("unit testing", "unit tests", "unittest", "pytest"),
     "web development": ("web application", "web applications", "web app"),
+    "typescript": ("typescript", "ts"),
+    "react": ("react", "react.js", "reactjs"),
+    "node.js": ("node.js", "nodejs", "node"),
+    "mongodb": ("mongodb", "mongo"),
+    "redis": ("redis",),
+    "kubernetes": ("kubernetes", "k8s"),
+    "terraform": ("terraform",),
+    "fastapi": ("fastapi", "fast api"),
+    "spring boot": ("spring boot", "springboot"),
+    "postgresql": ("postgresql", "postgres", "postgre sql"),
+    "graphql": ("graphql", "graph ql"),
+    "bash": ("bash", "shell scripting", "shell script"),
+    "pytorch": ("pytorch", "torch"),
+    "tensorflow": ("tensorflow", "tf"),
+    "excel": ("excel", "microsoft excel", "spreadsheets"),
+    "figma": ("figma",),
+    "opencv": ("opencv", "open cv"),
+    "critical thinking": ("critical thinking", "analytical thinking"),
+    "adaptability": ("adaptability", "adaptable"),
+    "attention to detail": ("attention to detail", "detail-oriented"),
+    "project management": ("project management", "project planning"),
+    "mentoring": ("mentoring", "mentor", "mentored"),
+    "creativity": ("creativity", "creative"),
+}
+
+COMPILED_PATTERNS = {
+    keyword: re.compile(
+        "|".join(
+            rf"(?<![a-zA-Z0-9]){re.escape(alias)}(?![a-zA-Z0-9])"
+            for alias in KEYWORD_ALIASES.get(keyword, (keyword,))
+        ),
+        re.IGNORECASE,
+    )
+    for keyword in TECHNICAL_SKILLS | SOFT_SKILLS
 }
 
 ACTION_VERBS = {
@@ -170,9 +227,9 @@ class ResumeAnalyzer:
             soft_skills,
         )
         job_match = self._calculate_job_match(
+            normalized_text,
+            self._normalize(job_description),
             score,
-            matched_keywords,
-            missing_keywords,
         )
         summary = self._build_summary(
             score,
@@ -219,14 +276,14 @@ class ResumeAnalyzer:
     @staticmethod
     def _contains_keyword(text: str, keyword: str) -> bool:
         """Return True when text contains a keyword or known alias."""
-        aliases = KEYWORD_ALIASES.get(keyword, (keyword,))
+        pattern = COMPILED_PATTERNS.get(keyword)
+        if pattern is None:
+            pattern = re.compile(
+                rf"(?<![a-zA-Z0-9]){re.escape(keyword)}(?![a-zA-Z0-9])",
+                re.IGNORECASE,
+            )
 
-        for alias in aliases:
-            pattern = rf"(?<![a-zA-Z0-9]){re.escape(alias)}(?![a-zA-Z0-9])"
-            if re.search(pattern, text):
-                return True
-
-        return False
+        return bool(pattern.search(text))
 
     @staticmethod
     def _find_sections(text: str) -> tuple[list[str], list[str]]:
@@ -251,35 +308,51 @@ class ResumeAnalyzer:
         soft_skills: list[str],
     ) -> int:
         """Calculate a resume quality score from 0 to 100."""
-        score = 20
-        score += min(len(found_sections) * 10, 40)
-        score += min(len(technical_skills) * 4, 24)
-        score += min(len(soft_skills) * 3, 9)
+        score = 0
+        score += min(len(found_sections) * 8, 32)
+        score += min(len(technical_skills) * 5, 25)
+        score += min(len(soft_skills) * 3, 12)
 
         if self._has_email(text):
-            score += 5
+            score += 8
         if self._has_phone(text):
             score += 5
-        if 120 <= word_count <= 800:
+        if 150 <= word_count <= 700:
             score += 8
         if self._has_action_verbs(text):
-            score += 9
+            score += 10
+        if self._has_measurable_impact(text):
+            score += 8
 
         return min(score, 100)
 
-    @staticmethod
     def _calculate_job_match(
-        score: int,
-        matched_keywords: list[str],
-        missing_keywords: list[str],
+        self,
+        resume_text: str,
+        job_description: str,
+        resume_score: int,
     ) -> int:
         """Calculate how closely a resume matches the target job."""
-        total_keywords = len(matched_keywords) + len(missing_keywords)
-        if total_keywords == 0:
-            return score
+        if not job_description:
+            return resume_score
 
-        keyword_score = int((len(matched_keywords) / total_keywords) * 100)
-        return round((keyword_score * 0.7) + (score * 0.3))
+        total_weight = 0
+        matched_weight = 0
+        for keyword in TECHNICAL_SKILLS | SOFT_SKILLS:
+            pattern = COMPILED_PATTERNS[keyword]
+            weight = len(pattern.findall(job_description))
+            if weight == 0:
+                continue
+
+            total_weight += weight
+            if pattern.search(resume_text):
+                matched_weight += weight
+
+        if total_weight == 0:
+            return resume_score
+
+        keyword_score = (matched_weight / total_weight) * 100
+        return round((keyword_score * 0.7) + (resume_score * 0.3))
 
     def _build_suggestions(
         self,
@@ -327,8 +400,7 @@ class ResumeAnalyzer:
             suggestions.append(
                 "Rewrite bullets with stronger action verbs and ownership."
             )
-        impact_pattern = r"\d+%|\d+\s*(users|members|seconds|hours|projects)"
-        if not re.search(impact_pattern, text):
+        if not self._has_measurable_impact(text):
             suggestions.append(
                 "Add measurable impact, such as users, time saved, or accuracy."
             )
@@ -460,3 +532,13 @@ class ResumeAnalyzer:
     def _has_action_verbs(text: str) -> bool:
         """Return True when the resume uses action-oriented verbs."""
         return any(verb in text for verb in ACTION_VERBS)
+
+    @staticmethod
+    def _has_measurable_impact(text: str) -> bool:
+        """Return True when text includes quantified achievements."""
+        pattern = (
+            r"(?<![a-zA-Z0-9])\d+(?:\.\d+)?\s*"
+            r"(?:%|users|members|projects|hours|seconds|ms|x|times faster)"
+            r"(?![a-zA-Z0-9])"
+        )
+        return bool(re.search(pattern, text, re.IGNORECASE))

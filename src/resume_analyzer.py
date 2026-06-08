@@ -167,15 +167,15 @@ class ResumeAnalysis:
     score: int
     job_match: int
     word_count: int
-    found_sections: list[str]
-    missing_sections: list[str]
-    technical_skills: list[str]
-    soft_skills: list[str]
-    strengths: list[str]
-    suggestions: list[str]
-    ats_tips: list[str]
-    matched_keywords: list[str]
-    missing_keywords: list[str]
+    found_sections: tuple[str, ...]
+    missing_sections: tuple[str, ...]
+    technical_skills: tuple[str, ...]
+    soft_skills: tuple[str, ...]
+    strengths: tuple[str, ...]
+    suggestions: tuple[str, ...]
+    ats_tips: tuple[str, ...]
+    matched_keywords: tuple[str, ...]
+    missing_keywords: tuple[str, ...]
     summary: str
     source: str = "Rule-based fallback"
 
@@ -265,13 +265,13 @@ class ResumeAnalyzer:
         return " ".join(text.lower().split())
 
     @staticmethod
-    def _find_terms(text: str, terms: set[str]) -> list[str]:
+    def _find_terms(text: str, terms: set[str]) -> tuple[str, ...]:
         """Return matching terms sorted alphabetically."""
         matches = []
         for term in terms:
             if ResumeAnalyzer._contains_keyword(text, term):
                 matches.append(term)
-        return sorted(matches)
+        return tuple(sorted(matches))
 
     @staticmethod
     def _contains_keyword(text: str, keyword: str) -> bool:
@@ -286,7 +286,7 @@ class ResumeAnalyzer:
         return bool(pattern.search(text))
 
     @staticmethod
-    def _find_sections(text: str) -> tuple[list[str], list[str]]:
+    def _find_sections(text: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
         """Detect expected resume sections."""
         found = []
         missing = []
@@ -297,15 +297,15 @@ class ResumeAnalyzer:
             else:
                 missing.append(section.title())
 
-        return found, missing
+        return tuple(found), tuple(missing)
 
     def _calculate_score(
         self,
         text: str,
         word_count: int,
-        found_sections: list[str],
-        technical_skills: list[str],
-        soft_skills: list[str],
+        found_sections: tuple[str, ...],
+        technical_skills: tuple[str, ...],
+        soft_skills: tuple[str, ...],
     ) -> int:
         """Calculate a resume quality score from 0 to 100."""
         score = 0
@@ -358,11 +358,11 @@ class ResumeAnalyzer:
         self,
         text: str,
         word_count: int,
-        missing_sections: list[str],
-        technical_skills: list[str],
-        soft_skills: list[str],
-        missing_keywords: list[str],
-    ) -> list[str]:
+        missing_sections: tuple[str, ...],
+        technical_skills: tuple[str, ...],
+        soft_skills: tuple[str, ...],
+        missing_keywords: tuple[str, ...],
+    ) -> tuple[str, ...]:
         """Create concrete suggestions based on missing resume signals."""
         suggestions = []
 
@@ -410,16 +410,16 @@ class ResumeAnalyzer:
                 "Great foundation. Add one tailored achievement for this role."
             )
 
-        return suggestions
+        return tuple(suggestions)
 
     @staticmethod
     def _build_strengths(
         word_count: int,
-        found_sections: list[str],
-        technical_skills: list[str],
-        soft_skills: list[str],
-        matched_keywords: list[str],
-    ) -> list[str]:
+        found_sections: tuple[str, ...],
+        technical_skills: tuple[str, ...],
+        soft_skills: tuple[str, ...],
+        matched_keywords: tuple[str, ...],
+    ) -> tuple[str, ...]:
         """Create short strength labels for the results UI."""
         strengths = []
 
@@ -434,17 +434,17 @@ class ResumeAnalyzer:
         if word_count >= 120:
             strengths.append("Detailed resume content")
 
-        return strengths or ["Readable text extracted"]
+        return tuple(strengths) or ("Readable text extracted",)
 
     @classmethod
     def _build_ats_tips(
         cls,
         text: str,
         word_count: int,
-        missing_sections: list[str],
-        technical_skills: list[str],
-        missing_keywords: list[str],
-    ) -> list[str]:
+        missing_sections: tuple[str, ...],
+        technical_skills: tuple[str, ...],
+        missing_keywords: tuple[str, ...],
+    ) -> tuple[str, ...]:
         """Return ATS tips customized to the resume structure."""
         tips = []
 
@@ -467,16 +467,16 @@ class ResumeAnalyzer:
 
         tips.append("Avoid tables, columns, icons, and text inside images.")
 
-        return tips[:5]
+        return tuple(tips[:5])
 
     @staticmethod
     def _compare_job_keywords(
         resume_text: str,
         job_description: str,
-    ) -> tuple[list[str], list[str]]:
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
         """Compare resume terms against the target job description."""
         if not job_description:
-            return [], []
+            return (), ()
 
         possible_keywords = TECHNICAL_SKILLS | SOFT_SKILLS
         job_keywords = sorted(
@@ -491,13 +491,13 @@ class ResumeAnalyzer:
         ]
         missing = [term for term in job_keywords if term not in matched]
 
-        return matched, missing
+        return tuple(matched), tuple(missing)
 
     @staticmethod
     def _build_summary(
         score: int,
-        technical_skills: list[str],
-        missing_sections: list[str],
+        technical_skills: tuple[str, ...],
+        missing_sections: tuple[str, ...],
     ) -> str:
         """Build a short human-readable summary."""
         if score >= 80:
@@ -537,8 +537,15 @@ class ResumeAnalyzer:
     def _has_measurable_impact(text: str) -> bool:
         """Return True when text includes quantified achievements."""
         pattern = (
-            r"(?<![a-zA-Z0-9])\d+(?:\.\d+)?\s*"
-            r"(?:%|users|members|projects|hours|seconds|ms|x|times faster)"
-            r"(?![a-zA-Z0-9])"
+            r"(?<![a-zA-Z0-9])(?:"
+            r"\d[\d,]*(?:\.\d+)?\s*(?:%|x|users?|customers?|members?|"
+            r"projects?|hours?|hrs?|minutes?|mins?|seconds?|secs?|ms|"
+            r"dollars?|\$|revenue|sales|requests?|records?|tickets?|"
+            r"employees?|students?|clients?)\b"
+            r"|(?:reduced|increased|improved|grew|cut|saved|lowered|raised)"
+            r"\s+(?:[a-z]+\s+){0,4}(?:by\s+)?\d[\d,]*(?:\.\d+)?%"
+            r"|served\s+\d[\d,]*(?:\.\d+)?\s+(?:customers?|clients?|users?)"
+            r"|\d[\d,]*(?:\.\d+)?x\s+faster"
+            r")"
         )
         return bool(re.search(pattern, text, re.IGNORECASE))

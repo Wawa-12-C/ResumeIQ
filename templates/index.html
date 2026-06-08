@@ -576,7 +576,7 @@
       id="upload-panel"
       class="screen {{ '' if analysis else 'active' }}"
     >
-      <form class="upload-card" method="post" enctype="multipart/form-data">
+      <form class="upload-card" method="post" enctype="multipart/form-data" id="upload-form">
         <div class="drop-zone" id="drop-zone">
           <div>
             <div class="file-mark" aria-hidden="true"></div>
@@ -611,7 +611,7 @@
         ></textarea>
 
         <div class="actions">
-          <button class="btn-primary" type="submit">
+          <button class="btn-primary" type="submit" id="submit-button">
             Analyze Resume with AI
           </button>
         </div>
@@ -798,6 +798,8 @@
     const fileName = document.querySelector("#file-name");
     const clearFile = document.querySelector("#clear-file");
     const dropZone = document.querySelector("#drop-zone");
+    const uploadForm = document.querySelector("#upload-form");
+    const submitButton = document.querySelector("#submit-button");
     const circumference = 320.44;
     const initialTab = "{{ 'results' if analysis else 'upload' }}";
     const targetScore = Number("{{ analysis.score if analysis else 0 }}");
@@ -891,6 +893,23 @@
         event.preventDefault();
         dropZone.classList.remove("drag-over");
       });
+    });
+
+    dropZone.addEventListener("drop", (event) => {
+      const file = event.dataTransfer.files[0];
+      if (!file) {
+        return;
+      }
+
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      fileInput.files = transfer.files;
+      fileName.textContent = file.name;
+    });
+
+    uploadForm.addEventListener("submit", () => {
+      submitButton.disabled = true;
+      submitButton.textContent = "Analyzing…";
     });
 
     if (initialTab === "results") {

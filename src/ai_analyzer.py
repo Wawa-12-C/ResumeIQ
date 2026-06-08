@@ -165,17 +165,20 @@ Target job description:
         try:
             score = int(value)
         except (TypeError, ValueError):
-            return 0
+            logger.warning("AI response contained a non-numeric score: %r", value)
+            raise ValueError("AI response contained a non-numeric score.")
 
         return max(0, min(score, 100))
 
     @staticmethod
-    def _clean_list(value: Any) -> list[str]:
-        """Convert a JSON value into a safe list of short strings."""
+    def _clean_list(value: Any) -> tuple[str, ...]:
+        """Convert a JSON value into a safe tuple of short strings."""
         if not isinstance(value, list):
-            return []
+            return ()
 
-        return [str(item).strip()[:120] for item in value if str(item).strip()]
+        return tuple(
+            str(item).strip()[:120] for item in value if str(item).strip()
+        )
 
     @staticmethod
     def _with_source(

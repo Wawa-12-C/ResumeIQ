@@ -5,7 +5,6 @@ from pathlib import Path
 
 from flask import Flask, flash, render_template, request
 from werkzeug.exceptions import RequestEntityTooLarge
-from werkzeug.utils import secure_filename
 
 try:
     from src.ai_analyzer import AIResumeAnalyzer
@@ -67,14 +66,9 @@ def analyze_uploaded_resume():
         flash("Unsupported file type. Please upload a PDF or TXT file.")
         return None
 
-    filename = secure_filename(original_filename)
-    if not filename:
-        flash("The uploaded file name is invalid.")
-        return None
-
     saved_path = None
     try:
-        saved_path = file_handler.save(uploaded_file, filename)
+        saved_path = file_handler.save(uploaded_file, original_filename)
         text = file_handler.extract_text(saved_path)
         return resume_analyzer.analyze(text, job_description)
     except ValueError as exc:
